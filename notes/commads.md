@@ -5,10 +5,11 @@
 
 ## Containers
 Container boundaries are not physical
+
 ![plot](./diagrams/screenshots/containers.png)
 
 ## Image to container mapping
-Image a snapshot of a file system and startup command
+Image contains a snapshot of a file system and startup command
 ![plot](./diagrams/screenshots/image_to_container.png)
 
 ## Docker stack
@@ -137,3 +138,67 @@ Linux processes have three communication channels *STDIN, STDOUT & STDERR*, `-i`
 Getting command prompt in a container `docker exec -it <container-id> sh`
 
 Starting container with command prompt `docker run -it <image-name> sh`
+
+# Building custom images through docker server
+
+![plot](./diagrams/screenshots/base.png)
+
+```
+# Use an existing docker image as a base
+FROM alpine
+
+# Download and install dependency
+RUN apk add --update redis
+
+# Tell the image what to do when it starts as a container
+CMD [ "redis-server" ]
+```
+
+Building a docker image from Dockerfile `docker build <build-context>`
+
+eg: `docker build .`
+
+Building a docker image with tag `docker build -t <docker-hub-id>/<name-of-image-to-create>:<version> .`
+
+eg: `docker build -t soaib024/redis:latest .`
+
+Running a container created out of image from docker-hub `docker run soaib024/redis`
+
+At each step of build process new intermediate temporary container is created out of image from previous image till final image is created - intermediate image are cached for build time optimization 
+
+![plot](./diagrams/screenshots/process.png)
+
+Creating image out of running container `docker commit -c 'CMD ["cmd1"]' <container-id>`
+
+```
+mohammadsoaib@Mohammads-MacBook-Pro ~ % docker run -it alpine sh
+Unable to find image 'alpine:latest' locally
+latest: Pulling from library/alpine
+f56be85fc22e: Already exists 
+Digest: sha256:124c7d2707904eea7431fffe91522a01e5a861a624ee31d03372cc1d138a3126
+Status: Downloaded newer image for alpine:latest
+
+
+/ # apk add --update redis
+fetch https://dl-cdn.alpinelinux.org/alpine/v3.17/main/x86_64/APKINDEX.tar.gz
+fetch https://dl-cdn.alpinelinux.org/alpine/v3.17/community/x86_64/APKINDEX.tar.gz
+(1/1) Installing redis (7.0.11-r0)
+Executing redis-7.0.11-r0.pre-install
+Executing redis-7.0.11-r0.post-install
+Executing busybox-1.35.0-r29.trigger
+OK: 10 MiB in 16 packages
+/ # 
+```
+```
+mohammadsoaib@Mohammads-MacBook-Pro ~ % docker ps
+CONTAINER ID   IMAGE            COMMAND          CREATED          STATUS          PORTS     NAMES
+d8a024260789   alpine           "sh"             54 seconds ago   Up 51 seconds             ecstatic_joliot
+30082fbf4e57   soaib024/redis   "redis-server"   10 minutes ago   Up 10 minutes             xenodochial_shaw
+
+
+mohammadsoaib@Mohammads-MacBook-Pro ~ % docker commit -c 'CMD ["redis-server"]' d8a024260789
+sha256:105b2f334ae940877f50e71f5c30d9416124199c05aecab9336d88521c5d0104
+
+
+mohammadsoaib@Mohammads-MacBook-Pro ~ % docker run 105b2f334ae9408
+```
