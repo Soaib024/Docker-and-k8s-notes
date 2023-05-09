@@ -72,6 +72,7 @@ Staring a container: executing a startup command
 ```
 mohammadsoaib@Mohammads-MacBook-Pro ~ % docker create hello-world
 f545065be36ed4c10040e4c12006b78c4d0cacb06972e7e406ea1f5cb0d3d07b
+
 mohammadsoaib@Mohammads-MacBook-Pro ~ % docker start f545065be36ed
 f545065be36ed
 ```
@@ -82,6 +83,7 @@ adding **-a** flag says 'watch for output from container and print it out to ter
 ```
 mohammadsoaib@Mohammads-MacBook-Pro ~ % docker create hello-world 
 62c0eb7d6fea28dc8919ca742f274053e0d9647a56601a286f34ed55e81b90e9
+
 mohammadsoaib@Mohammads-MacBook-Pro ~ % docker start -a 62c0eb7d6fea28
 
 Hello from Docker!
@@ -119,8 +121,10 @@ Retrieving logs outputs: `docker logs <container-id>`
 ```
 mohammadsoaib@Mohammads-MacBook-Pro ~ % docker create busybox echo Hi there!
 00ef815ad1395b6e15165482a1381c18fa7dbb14c4ba2c4a91995e0eb10d1e46
+
 mohammadsoaib@Mohammads-MacBook-Pro ~ % docker start 00ef815ad13
 00ef815ad13
+
 mohammadsoaib@Mohammads-MacBook-Pro ~ % docker logs 00ef815ad13
 Hi there!
 ```
@@ -202,3 +206,32 @@ sha256:105b2f334ae940877f50e71f5c30d9416124199c05aecab9336d88521c5d0104
 
 mohammadsoaib@Mohammads-MacBook-Pro ~ % docker run 105b2f334ae9408
 ```
+
+# Making simple project with docker
+Copying files to container `COPY <path-to-folder-to-copy-on-machine-relative-to-build-context> <place-to-copy-stuff-to-inside-the-container>`
+
+```
+# Specify a base image
+FROM node:20-alpine
+# Set up working directory
+WORKDIR /usr/app
+# Copy everything from build context to working directory inside container
+COPY . .
+# Install some dependencies
+RUN npm install
+# Default command
+CMD ["npm", "start"]
+```
+
+Avoiding unnecessary `npm install` if `package.json` is not modified
+```
+FROM node:20-alpine
+WORKDIR /usr/app
+COPY ./package.json ./
+RUN npm install
+COPY ./ ./
+CMD ["npm", "start"]
+```
+
+Port forwarding `docker run -p <external-port>:<internal-port> <image-id/image-name>`
+
