@@ -235,3 +235,59 @@ CMD ["npm", "start"]
 
 Port forwarding `docker run -p <external-port>:<internal-port> <image-id/image-name>`
 
+# Docker compose with multiple local containers
+Docker Compose
+- Seperate CLI that gets installed along with Docker
+- Used to start up multipe Docker containers at the same time
+- Automates some of the long-winded arguments we pass to `docker run`
+
+```
+version: '3'
+services:
+  redis-server:
+    image: 'redis'
+  node-app:
+    build: .
+    ports:
+      - "4001:8081"
+```
+Defining these two service in a same file, docker-compose will create them in a same network and can communicate with each other
+
+
+Connecting to redis instance from node app
+```
+const client = redis.createClient({
+    host: 'redis-server',
+    port: 6379
+});
+```
+In `host` we specify connection uri but as node app and redis instance are defined in a same network, when node app tries to reach `host: 'redis-server'` docker sees it and forwards the request to redis-server service  
+
+`docker run myimage` -> `docker-compose up`
+
+`docker build . + docker run myimage` -> `docker-compose up --build`
+
+```
+[+] Running 3/1
+ ⠿ Network visits_default           Created                                                                                                                                                                        0.1s
+ ⠿ Container visits-redis-server-1  Created                                                                                                                                                                        0.1s
+ ⠿ Container visits-node-app-1      Created                                                                                                                                                                        0.1s
+Attaching to visits-node-app-1, visits-redis-server-1
+
+```
+
+Launch in background: `docker-compose up -d`
+
+Stop containers: `docker-compose down`
+
+### Automatic container restarts
+
+Restart policies
+| Policy        | Action                                                                | 
+| ------------- | --------------------------------------------------------------------- | 
+| "no"          | Never attempt to restart this container, if it stops or crashes       | 
+| always        | If this container stops for any reason always attempt to restart it   |
+| on-failure    | Only restart if the container stops with an error code other than 0   |
+| unless-stopped| Always restarts unless we forcibly stop it                            |
+
+`docker-compose ps` lists the running container only from docker-compose file present in the directory from where the commands was run
